@@ -98,6 +98,15 @@
                     {{end}}
                 </td>
             </tr>
+            <tr>
+                <td colspan="7">
+                    <form action="/submitFeedback" method="post">
+                        <input type="hidden" name="reportId" value="{{.ID}}">
+                        <textarea name="feedback" placeholder="Provide your feedback here" required></textarea>
+                        <button type="submit">Submit Feedback</button>
+                    </form>
+                </td>
+            </tr>
             {{else}}
             <tr>
                 <td colspan="7">No reports found.</td>

@@ -56,7 +56,7 @@ func main() {
 	http.HandleFunc("/approveRequest", models.HandleApproveRequest)
 	http.HandleFunc("/rejectRequest", models.HandleRejectRequest)
 	http.HandleFunc("/revokeModerator", models.HandleRevokeModerator)
-	
+	http.HandleFunc("/submitFeedback", models.HandleSubmitFeedback)
 
 	http.HandleFunc("/moderatorPanel", models.HandleModeratorPanel)
 	http.HandleFunc("/deletePost", models.HandleModeratorDeletePost)

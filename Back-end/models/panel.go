@@ -15,6 +15,29 @@ type ModeratorRequest struct {
 	Status   string
 }
 
+func HandleFeedbackSubmission(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		reportID := r.FormValue("reportId")
+		feedback := r.FormValue("feedback")
+
+		db, err := sql.Open("sqlite3", "./Back-end/database/forum.db")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer db.Close()
+
+		// Insert or update feedback
+		_, err = db.Exec("INSERT INTO feedback (report_id, feedback) VALUES (?, ?) ON CONFLICT(report_id) DO UPDATE SET feedback = ?", reportID, feedback, feedback)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/panel", http.StatusSeeOther)
+	}
+}
+
 func HandleAdminPanel(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./Back-end/database/forum.db")
 	if err != nil {
@@ -231,6 +254,30 @@ func HandleRevokeModerator(w http.ResponseWriter, r *http.Request) {
 
 		// Commit transaction
 		if err := tx.Commit(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/panel", http.StatusSeeOther)
+	} else {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	}
+}
+
+func HandleSubmitFeedback(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		reportID := r.FormValue("reportId")
+		feedback := r.FormValue("feedback")
+
+		db, err := sql.Open("sqlite3", "./Back-end/database/forum.db")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer db.Close()
+
+		_, err = db.Exec("INSERT INTO feedback (report_id, feedback) VALUES (?, ?)", reportID, feedback)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -35,6 +35,7 @@
                 <th>Content</th>
                 <th>Image</th>
                 <th>Created At</th>
+                <th>Feedback</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -52,6 +53,7 @@
                     {{end}}
                 </td>
                 <td>{{.CreatedAt}}</td>
+                <td>{{if .Feedback.Valid}}{{.Feedback.String}}{{else}}No Feedback{{end}}</td>
                 <td class="actions">
                     <form action="/deletePost" method="post" style="display:inline;">
                         <input type="hidden" name="postId" value="{{.ID}}">
@@ -66,10 +68,11 @@
             </tr>
             {{else}}
             <tr>
-                <td colspan="6">No posts found.</td>
+                <td colspan="7">No posts found.</td>
             </tr>
             {{end}}
         </tbody>
+        
     </table>
 </body>
 </html>

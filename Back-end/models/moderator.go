@@ -21,8 +21,13 @@ type Post struct {
 	TotalDislikes int
 }
 
+type PostWithFeedback struct {
+	Post
+	Feedback sql.NullString
+}
+
 type ModeratorPanelData struct {
-	Posts []Post
+	Posts []PostWithFeedback
 }
 
 func HandleModeratorPanel(w http.ResponseWriter, r *http.Request) {
@@ -33,17 +38,27 @@ func HandleModeratorPanel(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, user_id, title, content, image, category_id, created_at, total_likes, total_dislikes FROM posts")
+	query := `
+        SELECT p.id, p.user_id, p.title, p.content, p.image, p.category_id, p.created_at, p.total_likes, p.total_dislikes, IFNULL(f.feedback, '')
+        FROM posts p
+        LEFT JOIN (
+            SELECT r.post_id, fb.feedback
+            FROM reports r
+            LEFT JOIN feedback fb ON r.id = fb.report_id
+        ) f ON p.id = f.post_id
+    `
+
+	rows, err := db.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var posts []Post
+	var posts []PostWithFeedback
 	for rows.Next() {
-		var post Post
-		if err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.Image, &post.CategoryID, &post.CreatedAt, &post.TotalLikes, &post.TotalDislikes); err != nil {
+		var post PostWithFeedback
+		if err := rows.Scan(&post.ID, &post.UserID, &post.Title, &post.Content, &post.Image, &post.CategoryID, &post.CreatedAt, &post.TotalLikes, &post.TotalDislikes, &post.Feedback); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
