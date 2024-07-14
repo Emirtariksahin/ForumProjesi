@@ -10,7 +10,7 @@ Bu bir seyahat konusunda yapılmış forum sitesidir. Kullanıcı kayıt olup gi
 ## Nasıl Çalışır
 1. Repoyu klonlamalısınız.
 ```console
-  git clone [<repository_url>](https://github.com/Emirtariksahin/ForumProject)
+  git clone [<repository_url>](https://github.com/Emirtariksahin/ForumProjesi)
 ```
 2. İnternet sitesini localde çalıştırmak için aşağıdaki komutu giriniz.
 ```console
