@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
@@ -86,10 +87,21 @@ func HandleModeratorDeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleReportPost(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("user_id")
+	if err != nil {
+		http.Error(w, "User ID not provided", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseInt(cookie.Value, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
 	if r.Method == http.MethodPost {
 		postID := r.FormValue("postId")
 		reason := r.FormValue("reason")
-		moderatorID := getCurrentModeratorID(r) // Assume this function retrieves the logged-in moderator ID
+		moderatorID := userID // Assume this function retrieves the logged-in moderator ID
 
 		db, err := sql.Open("sqlite3", "./Back-end/database/forum.db")
 		if err != nil {
@@ -106,9 +118,4 @@ func HandleReportPost(w http.ResponseWriter, r *http.Request) {
 
 		http.Redirect(w, r, "/moderatorPanel", http.StatusSeeOther)
 	}
-}
-
-func getCurrentModeratorID(r *http.Request) int {
-	// Placeholder function. Replace with actual implementation to get the logged-in moderator's ID.
-	return 1
 }
