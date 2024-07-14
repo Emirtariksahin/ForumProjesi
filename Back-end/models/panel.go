@@ -23,21 +23,57 @@ func HandleAdminPanel(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT mr.id, u.username, mr.status FROM moderator_requests mr JOIN users u ON mr.user_id = u.id")
+	// Fetch moderator requests
+	requestRows, err := db.Query("SELECT mr.id, u.username, mr.status FROM moderator_requests mr JOIN users u ON mr.user_id = u.id")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer requestRows.Close()
 
 	var requests []ModeratorRequest
-	for rows.Next() {
+	for requestRows.Next() {
 		var req ModeratorRequest
-		if err := rows.Scan(&req.ID, &req.Username, &req.Status); err != nil {
+		if err := requestRows.Scan(&req.ID, &req.Username, &req.Status); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		requests = append(requests, req)
+	}
+
+	// Fetch reports with post photo URLs
+	reportRows, err := db.Query("SELECT r.id, p.id, p.title, u.username, r.reason, r.reported_at, p.image FROM reports r JOIN posts p ON r.post_id = p.id JOIN users u ON r.moderator_id = u.id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer reportRows.Close()
+
+	var reports []struct {
+		ID         int
+		PostID     int
+		PostTitle  string
+		Moderator  string
+		Reason     string
+		ReportedAt string
+		PhotoURL   string
+	}
+
+	for reportRows.Next() {
+		var r struct {
+			ID         int
+			PostID     int
+			PostTitle  string
+			Moderator  string
+			Reason     string
+			ReportedAt string
+			PhotoURL   string
+		}
+		if err := reportRows.Scan(&r.ID, &r.PostID, &r.PostTitle, &r.Moderator, &r.Reason, &r.ReportedAt, &r.PhotoURL); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		reports = append(reports, r)
 	}
 
 	tmpl, ok := tmplCache["panel"]
@@ -48,8 +84,18 @@ func HandleAdminPanel(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Requests []ModeratorRequest
+		Reports  []struct {
+			ID         int
+			PostID     int
+			PostTitle  string
+			Moderator  string
+			Reason     string
+			ReportedAt string
+			PhotoURL   string
+		}
 	}{
 		Requests: requests,
+		Reports:  reports,
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
@@ -194,4 +240,3 @@ func HandleRevokeModerator(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
 }
-
