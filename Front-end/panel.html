@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h2>Admin Panel - Moderator Requests</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Requests}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.Username}}</td>
+                <td>{{.Status}}</td>
+                <td>
+                    {{if eq .Status "pending"}}
+                        <form action="/approveRequest" method="post" style="display:inline;">
+                            <input type="hidden" name="requestId" value="{{.ID}}">
+                            <button type="submit">Approve</button>
+                        </form>
+                        <form action="/rejectRequest" method="post" style="display:inline;">
+                            <input type="hidden" name="requestId" value="{{.ID}}">
+                            <button type="submit">Reject</button>
+                        </form>
+                    {{else if eq .Status "approved"}}
+                    <form action="/revokeModerator" method="post" style="display:inline;">
+                        <input type="hidden" name="requestId" value="{{.ID}}">
+                        <button type="submit">Revoke Moderator</button>
+                    </form>
+                    
+                    
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="4">No requests found.</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</body>
+</html>
